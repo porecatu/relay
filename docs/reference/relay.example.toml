@@ -1,0 +1,135 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# relay.example.toml — configuração de referência do Porecatu Relay.
+#
+# Todas as chaves estão aqui, com o valor padrão. Duas exceções, marcadas com
+# "PADRÃO:" no comentário: `[server] bind` e o token de exemplo, ajustados para
+# este arquivo rodar como está em desenvolvimento local
+# (`cargo run -- --config docs/reference/relay.example.toml`).
+#
+# Chave desconhecida é ERRO, não aviso (PRD-001 RF-1.2). Limite abaixo do piso
+# da especificação do protocolo também impede a subida (RF-1.16):
+# https://github.com/porecatu/protocol/blob/main/docs/especificacao/01-transporte-e-relay.md
+#
+# Toda chave pode ser sobrescrita por variável de ambiente no formato
+# PORECATU_RELAY_<SEÇÃO>_<CHAVE>, ex.: PORECATU_RELAY_SERVER_BIND (RF-1.3).
+#
+# Não há recarga a quente: mudou o arquivo, reinicie. Host e celular
+# reconectam sozinhos. A única exceção é o certificado TLS ([tls] abaixo).
+
+[server]
+# Endereço e porta em que o relay escuta.
+# PADRÃO: "0.0.0.0:443". Aqui em loopback, para rodar sem TLS em
+# desenvolvimento.
+bind = "127.0.0.1:8080"
+
+# Sem [tls], o relay só sobe com `bind` em loopback, a menos que isto seja
+# true. Ligue SÓ quando um proxy reverso termina o TLS na frente do relay
+# (ADR-0004). Com isto ligado, o relay confia que alguém cifra a conexão.
+behind_proxy = false
+
+# Endereços (ou redes CIDR) de proxies dos quais o relay aceita o cabeçalho
+# X-Forwarded-For para registrar o IP real nos logs. Vazio = nunca aceita.
+trusted_proxies = []
+
+# Segundos que o encerramento (SIGTERM/SIGINT) espera as conexões fecharem
+# antes de sair mesmo assim (RF-1.22).
+shutdown_grace_seconds = 10
+
+# [tls]
+# Descomente para o relay terminar o TLS ele mesmo (ADR-0004). Sem esta
+# seção, o relay fala HTTP/WebSocket simples (ver `behind_proxy`).
+#
+# Certificado em PEM, com a cadeia completa (ex.: fullchain.pem do certbot).
+# cert_file = "/etc/letsencrypt/live/relay.exemplo.com.br/fullchain.pem"
+# Chave privada em PEM.
+# key_file = "/etc/letsencrypt/live/relay.exemplo.com.br/privkey.pem"
+# Versão mínima de TLS: "1.3" ou "1.2". Nada abaixo é aceito.
+# min_version = "1.3"
+# De quantos em quantos segundos o relay confere se os arquivos mudaram
+# (renovação), para trocar o certificado sem reiniciar (RF-1.11).
+# reload_check_seconds = 300
+
+# Tokens do operador: só um desktop que apresente um destes consegue se
+# registrar (ADR-0003). O token não protege conteúdo — quem faz isso é a
+# sessão cifrada entre desktop e celular —, protege o seu servidor contra uso
+# por terceiros. Gere um com `porecatu-relay token new --name <nome>`.
+#
+# Cada token tem um nome (aparece nos logs, nunca o valor) e um valor de 32 a
+# 128 caracteres ASCII imprimíveis. Para revogar, apague a entrada e reinicie.
+#
+# PADRÃO: nenhum token (e o relay não sobe sem pelo menos um). O de baixo é
+# SÓ para desenvolvimento local; nunca use um token publicado.
+[[tokens]]
+name = "desenvolvimento"
+value = "token-de-desenvolvimento-nao-use-em-producao"
+
+# O valor pode vir de um arquivo, para segredo montado pelo orquestrador
+# (Docker secrets, systemd LoadCredential). Use `value` OU `value_file`.
+# [[tokens]]
+# name = "notebook"
+# value_file = "/run/secrets/porecatu_relay_notebook"
+
+[limits]
+# Hosts (desktops) registrados ao mesmo tempo, no total.
+max_hosts = 1000
+
+# Canais simultâneos por host, isto é, celulares conectados ao mesmo desktop.
+# Piso da especificação: 8.
+max_channels_per_host = 16
+
+# Tamanho máximo de um quadro WebSocket, em bytes. Quadro maior fecha a
+# conexão com 1009. Piso da especificação: 70000.
+max_frame_bytes = 70000
+
+# Banda sustentada por canal, em kbit/s, em cada sentido. Estourar por mais
+# que a rajada fecha o canal com `limit-exceeded`.
+# Piso da especificação: 2000 (2 Mbit/s).
+channel_bandwidth_kbps = 8000
+
+# Rajada permitida acima da banda sustentada, em KiB.
+channel_burst_kib = 1024
+
+# Quadros que podem esperar na fila do host para um celular. Fila cheia fecha
+# AQUELE canal com `limit-exceeded`, para um celular lento não parar os
+# outros (arquitetura §5).
+channel_queue_frames = 64
+
+# Quadros que podem esperar na fila dos celulares para o host. Fila cheia
+# faz o celular esperar (contrapressão), sem fechar nada.
+host_queue_frames = 256
+
+# Segundos que o desktop tem para responder ao desafio de registro.
+register_timeout_seconds = 10
+
+# Conexões de celular aceitas por IP por minuto (contra varredura de host_id).
+client_connects_per_ip_per_minute = 30
+
+# Tentativas de registro de host por IP por minuto (contra força bruta de
+# token).
+host_attempts_per_ip_per_minute = 10
+
+# Consultas de presença (GET /v0/presence/<host_id>) por IP por minuto. O app
+# consulta a cada 30 s por desktop, só com a lista na tela.
+presence_per_minute_per_ip = 120
+
+[log]
+# Nível: "error", "warn", "info", "debug" ou "trace". Em nenhum nível o log
+# contém conteúdo de sessão, token ou cabeçalho Authorization (RF-1.18).
+level = "info"
+
+# "text" (legível) ou "json" (para coletor de logs).
+format = "text"
+
+# Como o IP aparece nos logs: "full", "truncated" (/24 no IPv4, /48 no IPv6)
+# ou "none".
+ip_addresses = "truncated"
+
+[metrics]
+# Métricas Prometheus em GET /metrics. Só contagens agregadas, sem host_id,
+# IP ou nome de token em rótulo (RF-1.21).
+enabled = false
+
+# Endereço do listener de métricas, separado do principal. Mantenha em
+# loopback ou numa rede interna.
+bind = "127.0.0.1:9464"
