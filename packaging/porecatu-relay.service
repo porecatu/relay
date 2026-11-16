@@ -1,0 +1,79 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Unidade systemd de exemplo do Porecatu Relay (ADR-0005, RF-1.26).
+#
+# Instalação:
+#   1. Copie o binário para /usr/local/bin/porecatu-relay.
+#   2. Copie docs/reference/relay.example.toml para /etc/porecatu-relay/relay.toml
+#      e ajuste (em especial [server] bind, [tls] ou behind_proxy, e os tokens).
+#   3. Guarde o valor do token em /etc/porecatu-relay/token (modo 0600, dono
+#      root) e aponte no relay.toml
+#      `value_file = "/run/credentials/porecatu-relay.service/token"` — o
+#      LoadCredential abaixo o expõe ao serviço nesse diretório, já que o
+#      usuário dinâmico não lê /etc/porecatu-relay/token direto.
+#   4. Copie este arquivo para /etc/systemd/system/ e rode
+#      `systemctl enable --now porecatu-relay`.
+#
+# Não há recarga a quente (exceto o certificado TLS): mudou a configuração,
+# `systemctl restart porecatu-relay`.
+
+[Unit]
+Description=Porecatu Relay
+Documentation=https://github.com/porecatu/relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+ExecStart=/usr/local/bin/porecatu-relay --config /etc/porecatu-relay/relay.toml
+Restart=on-failure
+RestartSec=2
+
+# Sem conta fixa: o systemd cria um usuário efêmero para o serviço. O relay não
+# grava nada em disco.
+DynamicUser=yes
+
+# O token (e, com TLS embutido, a chave privada) chegam como credencial: só o
+# serviço lê, em $CREDENTIALS_DIRECTORY (= /run/credentials/porecatu-relay.service).
+# No relay.toml use caminhos absolutos para esse diretório, por exemplo
+#   value_file = "/run/credentials/porecatu-relay.service/token"
+# Com TLS embutido, acrescente a chave e o certificado do mesmo jeito:
+#   LoadCredential=privkey.pem:/etc/letsencrypt/live/relay.exemplo.com.br/privkey.pem
+LoadCredential=token:/etc/porecatu-relay/token
+
+# Endurecimento.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RemoveIPC=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+UMask=0077
+
+# Capacidades: nenhuma por padrão (porta >= 1024, ou atrás de proxy). A linha
+# vazia zera o conjunto. Para o relay escutar direto numa porta abaixo de 1024
+# (ex.: 443 com TLS embutido), descomente as duas linhas seguintes (a segunda
+# repõe só a capacidade de abrir porta baixa). Só nesse caso.
+CapabilityBoundingSet=
+#CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+#AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target

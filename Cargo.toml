@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+[package]
+name = "porecatu-relay"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98.0"
+description = "Self-hosted blind relay between the Porecatu desktop (host) and the Porecatu Remote app (client)"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/porecatu/relay"
+readme = "README.md"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "porecatu-relay"
+path = "src/main.rs"
+
+# Every dependency is pinned to an exact version (ADR-0007). Raising one is a
+# task of its own, with the changelog read and the integration tests running.
+[dependencies]
+axum = { version = "=0.8.9", features = ["ws"] }
+axum-server = { version = "=0.9.2", default-features = false, features = ["tls-rustls-no-provider"] }
+base64 = "=0.23.1"
+blake2 = "=0.10.6"
+bytes = "=1.12.1"
+ed25519-dalek = "=3.0.0"
+getrandom = "=0.4.3"
+ipnet = "=2.12.2"
+# Pinned to a commit of the protocol's main branch until the crate is published
+# with a version; then switch to an exact version. A local checkout next to
+# this repository can override it through `.cargo/config.toml` (gitignored).
+porecatu-protocol = { git = "https://github.com/porecatu/protocol", rev = "758d68c6605fcce57cf8d5070c13fb6c5f9d645d", default-features = false }
+rustls = { version = "=0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
+serde = { version = "=1.0.229", features = ["derive"] }
+subtle = "=2.6.1"
+tokio = { version = "=1.54.1", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "time"] }
+tokio-util = "=0.7.20"
+toml = "=1.2.1"
+tracing = "=0.1.44"
+tracing-subscriber = { version = "=0.3.23", features = ["json", "env-filter", "fmt"] }
+# Same version `axum` resolves; used only to recognise its capacity error.
+tungstenite = { version = "=0.29.0", default-features = false }
+
+[dev-dependencies]
+# Same `tungstenite` that `axum` resolves (tokio-tungstenite 0.29).
+rcgen = "=0.14.10"
+tokio-tungstenite = "=0.29.0"
+
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+all = "warn"
+
+[profile.release]
+lto = "thin"
+strip = true

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# relay.toml — configuração padrão da imagem de contêiner (ADR-0005).
+#
+# Fica em /etc/porecatu-relay/relay.toml. Só o que difere do padrão está aqui;
+# o resto vem dos padrões do relay. A referência completa de chaves é
+# docs/reference/relay.example.toml. Para mudar algo, monte o seu arquivo por
+# cima deste ou use variáveis de ambiente PORECATU_RELAY_<SEÇÃO>_<CHAVE>
+# (ex.: PORECATU_RELAY_SERVER_TRUSTED_PROXIES).
+
+[server]
+# Escuta em todas as interfaces do contêiner. Quem expõe a porta é o
+# `docker run -p` / o orquestrador; publique só em loopback ou numa rede
+# interna: o relay deste arquivo NÃO fala TLS.
+bind = "0.0.0.0:8080"
+
+# O TLS termina num proxy reverso na frente do contêiner (ADR-0004), então o
+# relay sobe sem [tls]. Com isto ligado, o relay confia que alguém cifra a
+# conexão: sem proxy, o tráfego da sessão passa em claro entre o relay e o
+# mundo (a sessão Noise continua cifrando o conteúdo, mas o token e os
+# metadados não).
+behind_proxy = true
+
+# Endereços (ou redes CIDR) dos proxies dos quais o relay aceita o cabeçalho
+# X-Forwarded-For para saber o IP real do par. Sem isto, os logs e os limites
+# por IP enxergam o IP do proxy — todos os celulares viram um só.
+#
+# Preencha com o endereço de onde o proxy chega ao contêiner: na rede padrão do
+# Docker costuma ser a rede da bridge (ex.: "172.17.0.0/16"); no Compose, a
+# sub-rede da rede em que o proxy e o relay estão. Nunca coloque aqui um
+# endereço que um cliente consiga usar para falar direto com o relay.
+# trusted_proxies = ["172.17.0.0/16"]
+
+# Token do operador, vindo de um segredo montado (Docker secrets, Kubernetes
+# Secret, `-v ./token:/run/secrets/porecatu-relay-token:ro`). O arquivo tem só
+# o valor, de 32 a 128 caracteres ASCII imprimíveis; a quebra de linha final é
+# ignorada. Gere o valor com `porecatu-relay token new`. O relay não sobe sem
+# pelo menos um token.
+[[tokens]]
+name = "operador"
+value_file = "/run/secrets/porecatu-relay-token"
