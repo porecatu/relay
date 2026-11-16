@@ -42,7 +42,7 @@ toml = "=1.2.1"
 tracing = "=0.1.44"
 tracing-subscriber = { version = "=0.3.23", features = ["json", "env-filter", "fmt"] }
 # Same version `axum` resolves; used only to recognise its capacity error.
-tungstenite = { version = "=0.29.0", default-features = false }
+tungstenite = { version = "=0.30.0", default-features = false }
 
 [dev-dependencies]
 # Same `tungstenite` that `axum` resolves (tokio-tungstenite 0.29).
