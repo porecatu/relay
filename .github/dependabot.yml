@@ -22,3 +22,11 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+    ignore:
+      # The host_id is derived with blake2 in porecatu-protocol: both
+      # repositories move to a new minor together, by hand.
+      - dependency-name: blake2
+        versions: [">= 0.11"]
+      # Must be the version axum resolves; they go up with axum, by hand.
+      - dependency-name: tungstenite
+      - dependency-name: tokio-tungstenite
