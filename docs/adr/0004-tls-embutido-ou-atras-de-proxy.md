@@ -25,12 +25,16 @@ O usuário-alvo ([PRD-000](../prd/prd-000-visao-de-produto.md)) chega de dois je
 - **Recarga do certificado** sem reiniciar: o relay observa o `mtime` dos dois arquivos a cada `[tls] reload_check_seconds` (default 300) e, mudando, carrega o par novo numa configuração `rustls` nova para as conexões **seguintes**. Par inválido: mantém o anterior e loga o erro. Conexões abertas continuam com o certificado com que foram feitas.
 - Sem ACME embutido: emitir e renovar é do `certbot`, do orquestrador ou de quem o operador já usa.
 
+> **Nota de implementação (2026-11-16):** a recarga (`tls::watch`, `src/tls.rs`) compara o `mtime` **e o tamanho** de cada arquivo, carrega o par novo fora da thread do runtime (`spawn_blocking`) e o troca com `RustlsConfig::reload_from_config` do `axum-server`. `reload_check_seconds` aceita a partir de 1. O par é lido também na subida, antes de escutar: par ilegível impede a subida (código `2`). O provedor `ring` é passado explicitamente ao `rustls`, sem depender de um provedor padrão instalado por outro crate.
+
 ### 2. Atrás de proxy
 
 - Sem `[tls]`, o relay fala HTTP/WebSocket simples.
 - **Regra de subida:** sem TLS, o `bind` tem de ser de loopback (`127.0.0.0/8`, `::1`) **ou** `[server] behind_proxy = true`. Do contrário o processo não sobe, com a mensagem dizendo as duas saídas.
 - `behind_proxy = true` com `bind` fora de loopback é o caso do contêiner, cuja rede interna não é loopback mas também não é a internet. A responsabilidade passa a ser do operador, e a chave tem esse nome para que ninguém a ligue sem saber o que diz.
 - IP real do cliente por `X-Forwarded-For`, aceito só de endereços em `[server] trusted_proxies` ([PRD-001](../prd/prd-001-operacao-do-relay.md) RF-1.13).
+
+  > **Nota (2026-11-16):** a regra completa, inclusive a decisão do dono para a cadeia em que todos os saltos são proxies confiáveis (vale o IP do socket), está no RF-1.13 do [PRD-001](../prd/prd-001-operacao-do-relay.md). O IP resolvido vale para os logs e para os limites por IP, e `trusted_proxies` é aceito com ou sem `behind_proxy`.
 - O proxy **DEVE** repassar o upgrade de WebSocket e não deve impor timeout de inatividade menor que 60 s (o relay pinga a cada 25 s). Exemplos para Caddy e nginx entram no guia de operação na etapa R3.
 
 ## Alternativas consideradas
@@ -61,3 +65,8 @@ O usuário-alvo ([PRD-000](../prd/prd-000-visao-de-produto.md)) chega de dois je
 | Operador liga `behind_proxy` com o relay exposto direto | baixa | médio | Nome explícito da chave; aviso no log na subida quando `behind_proxy = true` e o `bind` não é privado (RFC 1918/4193) |
 | Proxy derruba WebSocket ocioso | média | baixo | Ping de 25 s do relay; exemplos de proxy com timeout adequado |
 | Certificado expira porque a renovação externa falhou | média | alto | O relay loga aviso a 14 dias do vencimento, uma vez por dia |
+
+> **Nota de implementação (2026-11-16):** duas mitigações desta tabela **não estão implementadas**:
+>
+> - **Aviso de vencimento do certificado a 14 dias.** Decidido pelo dono em 2026-11-16: fica como pendência registrada no [roadmap](../roadmap.md#pendências); até lá, vigiar o vencimento fica com o operador.
+> - **Aviso na subida com `behind_proxy = true` e `bind` fora de rede privada.** O relay sobe sem aviso; também pendência no roadmap, sem decisão tomada.

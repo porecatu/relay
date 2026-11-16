@@ -14,7 +14,9 @@ Isso protege contra um operador mal-intencionado, mas não basta contra um relay
 
 **O relay não interpreta, não guarda e não registra nada acima do envelope, e não tem estado que sobreviva ao processo.**
 
-1. **`payload` é opaco.** O tipo que o carrega no código (`OpaquePayload`, envolvendo `Bytes`) **não implementa `Debug`, `Display` nem `Serialize`**. Logar um `payload` não compila. A única operação sobre ele é encaminhar e medir o comprimento.
+1. **`payload` é opaco.** O tipo que o carrega no código (`OpaquePayload`, envolvendo o `Payload` do `porecatu-protocol`, que guarda `Bytes`) **não implementa `Debug`, `Display` nem `Serialize`**. Logar um `payload` não compila. A única operação sobre ele é encaminhar e medir o comprimento.
+
+   > **Nota de implementação (2026-11-16):** `OpaquePayload` (`src/payload.rs`) também não implementa `Clone`: o relay entrega cada quadro a um destinatário só, e sem `Clone` uma cópia acidental ("guardada para depuração") não compila.
 2. **Nada em disco.** Sem banco, sem arquivo de estado, sem cache, sem fila de mensagens para cliente ausente. O que o relay sabe — hosts registrados, canais abertos — vive em memória e morre com o processo.
 3. **Sem fila para quem não está.** Cliente que chega para um host que não está registrado recebe `host-unavailable` e a conexão fecha ([especificação §4](https://github.com/porecatu/protocol/blob/main/docs/especificacao/01-transporte-e-relay.md)). Não há "guardar até o host voltar".
 4. **Logs com campos fechados.** O que pode aparecer num log está listado no [PRD-001](../prd/prd-001-operacao-do-relay.md) RF-1.18 e em nenhum outro lugar; um teste roda uma sessão com marcador no `payload` e reprova se ele aparecer na saída em nível `trace`.
@@ -49,3 +51,5 @@ Isso protege contra um operador mal-intencionado, mas não basta contra um relay
 | Alguém adiciona `#[derive(Debug)]` ao tipo do `payload` | média | alto | Teste de compilação negativa (`trybuild`) que exige que formatar o tipo não compile; o teste de log do RF-1.18 |
 | Biblioteca de terceiros loga o quadro (ex.: `tracing` de dependência em `trace`) | média | alto | O filtro de `tracing` desliga os alvos das dependências de rede abaixo de `info`; o teste de log roda com o filtro de produção e com `trace` global |
 | Metadados (tamanho, ritmo) revelam atividade | alta | médio | Aceito no modelo de ameaça; o relay é auto-hospedado |
+
+> **Nota de implementação (2026-11-16):** o teste de compilação negativa não usa `trybuild`: são cinco exemplos `compile_fail` na documentação de `src/payload.rs` (`{:?}`, `{}`, `tracing` com `?payload`, `Serialize` e `clone()`), que o `cargo test` roda, mais um exemplo que compila para provar que a falha é do formato e não de digitação. O teste de log (`tests/blind_log.rs`) roda com o filtro de produção em `trace`, em texto e em JSON; os alvos das dependências de rede ficam em `info` no máximo e `RUST_LOG` é ignorado (`src/logging.rs`).

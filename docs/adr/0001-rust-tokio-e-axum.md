@@ -26,6 +26,12 @@ O dono do produto decidiu pela stack Rust antes da escrita. Este ADR registra o 
 - **`porecatu-protocol`** pinado por **versão exata** (`=x.y.z`): os tipos do envelope e o cálculo do `host_id` vêm de lá, testados contra os vetores do repositório do protocolo.
 - **`tracing`** para logs estruturados, com um filtro que não deixa campo de conteúdo existir (ver [ADR-0002](0002-relay-cego-e-sem-estado-persistente.md)).
 
+> **Nota de implementação (2026-11-16):** a decisão se manteve; três detalhes saíram diferentes do texto acima.
+>
+> - **`ciborium` não é dependência direta do relay.** Toda codificação CBOR do envelope está no `porecatu-protocol` (que usa `ciborium`); o relay só chama `porecatu_protocol::envelope` pelo adaptador `src/wire.rs`.
+> - **`porecatu-protocol` ainda não está pinado por versão exata.** Entra como dependência git fixada num commit do `main` do protocolo (`rev = "758d68c…"`); vira versão exata quando o crate for publicado ([roadmap](../roadmap.md#pendências)).
+> - O `tungstenite` que o `axum` resolve (`=0.29.0`) é dependência direta, só para reconhecer o erro de capacidade (quadro grande demais, `1009`) por tipo, não pelo texto da mensagem.
+
 ## Alternativas consideradas
 
 - **TypeScript (Node ou Bun).** Compartilharia a implementação TS do protocolo com o app Expo. Rejeitada pelo dono; e o relay só precisa do envelope, que é a parte mais simples do protocolo — o ganho de compartilhar com o app seria pequeno, e o de compartilhar com o desktop (Rust) é maior, porque é o desktop quem gera os envelopes de host.
@@ -53,4 +59,6 @@ O dono do produto decidiu pela stack Rust antes da escrita. Este ADR registra o 
 |---|---|---|---|
 | Mudança incompatível do `axum` no WebSocket | média | baixo | Versão exata no `Cargo.lock`, subida como tarefa própria com os testes de integração do roteamento |
 | `porecatu-protocol` e relay em versões que codificam diferente | baixa | alto | Versão exata; o CI roda os vetores de envelope do protocolo contra o relay |
+
+> **Nota de implementação (2026-11-16):** os vetores de envelope rodam hoje no repositório do protocolo, contra o mesmo `porecatu-protocol` que o relay usa; o CI do relay não os roda de novo. A versão exata depende da publicação do protocolo (nota acima).
 | Vulnerabilidade numa dependência de rede | média | alto | `cargo deny` e `cargo audit` no CI; Dependabot com SHA pinado |

@@ -29,11 +29,13 @@ A especificação do protocolo já decidiu a forma ([§2 e §3](https://github.c
 
 Logo depois do upgrade em `/v0/host`:
 
-1. O relay manda `challenge` com 32 bytes de `OsRng`.
+1. O relay manda `challenge` com 32 bytes do gerador aleatório do sistema (`getrandom`).
 2. Espera `register` por até `[limits] register_timeout_seconds` (default 10). Atraso: fecha com `4005`. Envelope de outro tipo ou CBOR inválido: fecha com `4004`.
 3. Verifica `signature` sobre `"porecatu-relay/v0/register" || nonce` com `ed25519-dalek` em modo **estrito** (`verify_strict`, que recusa chaves de ordem pequena e assinaturas maleáveis). Falha: fecha com `4001`.
 4. Calcula `host_id` pela fórmula da especificação, **pela função do crate `porecatu-protocol`**, nunca reimplementada aqui.
 5. Responde `registered { host_id }` e põe o host no registro em memória.
+
+> **Nota de implementação (2026-11-16):** a verificação está em `wire::verify_register` (`src/wire.rs`) e o `host_id` vem de `porecatu_protocol::host_id::host_id`. O host entra no registro **antes** do `registered` ser mandado. Com o registro cheio (`[limits] max_hosts`) e um `host_id` novo, o relay fecha com `4003`, como manda a [especificação §3](https://github.com/porecatu/protocol/blob/main/docs/especificacao/01-transporte-e-relay.md); substituição não conta para o limite. Em `/v0/host`, o limite por IP (`429`) é conferido **antes** do token, para toda tentativa contar, certa ou errada.
 
 ### 3. A última registração válida vence
 

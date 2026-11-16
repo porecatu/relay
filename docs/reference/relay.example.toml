@@ -13,6 +13,10 @@
 #
 # Toda chave pode ser sobrescrita por variável de ambiente no formato
 # PORECATU_RELAY_<SEÇÃO>_<CHAVE>, ex.: PORECATU_RELAY_SERVER_BIND (RF-1.3).
+# Exceção: os tokens só vêm deste arquivo (literal ou `value_file`).
+#
+# Sem --config, o relay procura /etc/porecatu-relay/relay.toml no Linux e
+# relay.toml ao lado do executável nas outras plataformas.
 #
 # Não há recarga a quente: mudou o arquivo, reinicie. Host e celular
 # reconectam sozinhos. A única exceção é o certificado TLS ([tls] abaixo).
@@ -29,7 +33,11 @@ bind = "127.0.0.1:8080"
 behind_proxy = false
 
 # Endereços (ou redes CIDR) de proxies dos quais o relay aceita o cabeçalho
-# X-Forwarded-For para registrar o IP real nos logs. Vazio = nunca aceita.
+# X-Forwarded-For para saber o IP real do par, nos logs e nos limites por IP.
+# Vale o endereço mais à direita do cabeçalho que não seja um destes proxies;
+# cabeçalho ausente ou inválido, ou cadeia só de proxies daqui, dá o IP da
+# conexão (PRD-001 RF-1.13). Vazio = nunca aceita. Em variável de ambiente,
+# separe por vírgulas.
 trusted_proxies = []
 
 # Segundos que o encerramento (SIGTERM/SIGINT) espera as conexões fecharem
@@ -79,15 +87,17 @@ max_hosts = 1000
 max_channels_per_host = 16
 
 # Tamanho máximo de um quadro WebSocket, em bytes. Quadro maior fecha a
-# conexão com 1009. Piso da especificação: 70000.
+# conexão com 1009. A especificação fixa 70000 como piso E teto: qualquer
+# outro valor impede a subida.
 max_frame_bytes = 70000
 
-# Banda sustentada por canal, em kbit/s, em cada sentido. Estourar por mais
-# que a rajada fecha o canal com `limit-exceeded`.
+# Banda sustentada por canal, em kbit/s, em cada sentido. Um quadro que não
+# cabe no que sobra da rajada fecha o canal com `limit-exceeded`.
 # Piso da especificação: 2000 (2 Mbit/s).
 channel_bandwidth_kbps = 8000
 
-# Rajada permitida acima da banda sustentada, em KiB.
+# Rajada permitida acima da banda sustentada, em KiB. Tem de caber um quadro
+# inteiro: mínimo 69.
 channel_burst_kib = 1024
 
 # Quadros que podem esperar na fila do host para um celular. Fila cheia fecha
@@ -100,6 +110,7 @@ channel_queue_frames = 64
 host_queue_frames = 256
 
 # Segundos que o desktop tem para responder ao desafio de registro.
+# Mínimo 10 (o prazo da especificação).
 register_timeout_seconds = 10
 
 # Conexões de celular aceitas por IP por minuto (contra varredura de host_id).

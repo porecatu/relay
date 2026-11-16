@@ -37,6 +37,13 @@ O relay roda no servidor do usuário: VPS Linux na maioria dos casos, às vezes 
 
 Unidade de exemplo em `packaging/porecatu-relay.service`, com `DynamicUser=yes`, `ProtectSystem=strict`, `ProtectHome=yes`, `PrivateTmp=yes`, `NoNewPrivileges=yes`, `LoadCredential=` para os tokens, e `AmbientCapabilities=CAP_NET_BIND_SERVICE` comentada (só para escutar na 443 direto).
 
+> **Nota de implementação (2026-11-16):** os três estão escritos e **nenhum foi exercitado** — não há Docker, `musl` nem `systemd` na máquina de desenvolvimento, e ainda não houve tag (dívida de verificação no [roadmap](../roadmap.md)).
+>
+> - **Binários:** `.github/workflows/release.yml`, numa tag `v*` que tem de bater com a versão do `Cargo.toml`. Os alvos `musl` compilam nativamente (x86_64 num runner x86_64, aarch64 num runner arm64) com `musl-gcc`; o pacote leva o binário, `LICENSE`, `README.md`, `relay.example.toml` e a unidade `systemd`, com o `.sha256` ao lado. As notas da release saem da seção da versão no `CHANGELOG.md`.
+> - **Imagem:** o `Dockerfile` tem dois caminhos para o mesmo resultado: o alvo padrão compila num estágio `rust:1.98.0-alpine` (musl, estático); o alvo `runtime-prebuilt`, usado pela release, copia os binários `musl` já compilados, sem emulação. Os dois terminam em `gcr.io/distroless/static:nonroot` (imagens base fixadas por digest), usuário `65532`, porta 8080, com `packaging/docker/relay.toml` (`behind_proxy = true`, token por `value_file` em `/run/secrets/porecatu-relay-token`). Tags `X.Y.Z` e `X.Y` explícitas; `latest` vem do padrão do `docker/metadata-action` e não sai em pré-lançamento.
+> - **systemd:** além do listado acima, a unidade zera o `CapabilityBoundingSet=` por padrão e traz comentadas as duas linhas que repõem só `CAP_NET_BIND_SERVICE`; o token chega por `LoadCredential=token:/etc/porecatu-relay/token`.
+> - **Dependência do protocolo:** o `porecatu-protocol` vem do GitHub fixado num commit (`rev`), então o build da imagem e o da release baixam o crate sozinhos; nenhum dos dois rodou ainda ([roadmap](../roadmap.md#pendências)).
+
 ## Alternativas consideradas
 
 - **Pacotes `.deb`/`.rpm`.** Instalação mais "nativa". Rejeitada no v0: o binário estático com a unidade `systemd` de exemplo cobre o mesmo caso com menos manutenção; pode entrar depois, com ADR.
