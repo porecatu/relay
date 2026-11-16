@@ -47,7 +47,7 @@ tungstenite = { version = "=0.29.0", default-features = false }
 [dev-dependencies]
 # Same `tungstenite` that `axum` resolves (tokio-tungstenite 0.29).
 rcgen = "=0.14.10"
-tokio-tungstenite = "=0.29.0"
+tokio-tungstenite = "=0.30.0"
 
 [lints.rust]
 unsafe_code = "deny"
