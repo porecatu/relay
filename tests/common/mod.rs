@@ -287,10 +287,34 @@ impl TestWs {
         }
     }
 
-    /// Like [`TestWs::next`], with `timeout` for this call only.
+    /// Like [`TestWs::next`], but `timeout` bounds the whole call, not each
+    /// read: with a ping arriving more often than `timeout`, a per-read
+    /// timeout would never expire and the call would never return.
     pub fn next_within(&mut self, timeout: Duration) -> Event {
-        self.set_timeout(timeout);
-        let event = self.next();
+        let deadline = Instant::now() + timeout;
+        let event = loop {
+            let left = deadline.saturating_duration_since(Instant::now());
+            if left.is_zero() {
+                break Event::Silence;
+            }
+            self.set_timeout(left);
+            match self.ws.read() {
+                Ok(Message::Binary(bytes)) => break Event::Binary(bytes.to_vec()),
+                Ok(Message::Close(frame)) => {
+                    break Event::Closed(frame.map(|frame| u16::from(frame.code)));
+                }
+                Ok(_) => {}
+                Err(WsError::Io(error))
+                    if matches!(
+                        error.kind(),
+                        std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+                    ) =>
+                {
+                    break Event::Silence;
+                }
+                Err(_) => break Event::Dropped,
+            }
+        };
         self.set_timeout(WAIT);
         event
     }
