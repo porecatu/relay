@@ -798,7 +798,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 [[package]]
 name = "porecatu-protocol"
 version = "0.1.0"
-source = "git+https://github.com/porecatu/protocol?rev=758d68c6605fcce57cf8d5070c13fb6c5f9d645d#758d68c6605fcce57cf8d5070c13fb6c5f9d645d"
+source = "git+https://github.com/porecatu/protocol?rev=0909e7ca88e3c180198e8ce7246445c4b0d9fbd1#0909e7ca88e3c180198e8ce7246445c4b0d9fbd1"
 dependencies = [
  "blake2",
  "bytes",
