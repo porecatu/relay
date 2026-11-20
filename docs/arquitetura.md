@@ -31,7 +31,7 @@ Um pacote, `porecatu-relay`, com uma biblioteca (`src/lib.rs`, usada pelos teste
 
 O envelope CBOR, o cálculo do `host_id`, os códigos de fechamento e os prazos de keepalive vêm do crate [`porecatu-protocol`](https://github.com/porecatu/protocol) (`porecatu_protocol::envelope`, `porecatu_protocol::host_id`); o relay não os reimplementa.
 
-> **Na implementação (2026-11-16):** o `porecatu-protocol` entra como dependência git fixada num commit do `main` do protocolo (`rev = "4ce7e4f…"` desde 2026-11-20, a especificação 0.5), até o crate ser publicado com versão; aí vira versão exata ([ADR-0001](adr/0001-rust-tokio-e-axum.md)).
+> **Na implementação (2026-11-16):** o `porecatu-protocol` entra como dependência git fixada num commit do `main` do protocolo (`rev = "a52fbb1…"` desde 2026-11-20, a especificação 0.6), até o crate ser publicado com versão; aí vira versão exata ([ADR-0001](adr/0001-rust-tokio-e-axum.md)).
 
 ## 1. Visão geral
 

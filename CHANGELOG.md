@@ -18,6 +18,7 @@ Implementação inicial, versão `0.1.0` no `Cargo.toml`. Serve o envelope
 
 ### Mudado
 
+- `porecatu-protocol` sobe para o commit da especificação 0.6 (`a52fbb1`, 2026-11-20), que acrescenta as sessões salvas pelo cliente (`list-sessions`, `sessions`, a ação `restore-session`). O relay não lê mensagens de aplicação: nada muda no envelope nem no roteamento; o `rev` sobe junto com o do Porecatu e o do Remote.
 - `porecatu-protocol` sobe para o commit da especificação 0.5 (`4ce7e4f`, 2026-11-20), que troca a ação `activate-tab` pela mensagem `view-tab`. O relay não lê mensagens de aplicação: nada muda no comportamento; o `rev` sobe para os três projetos falarem o mesmo commit.
 
 ### Adicionado
