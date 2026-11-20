@@ -113,7 +113,7 @@ O que o código ainda não faz, ou faz diferente do que os documentos pediam, co
 
 | Pendência | Estado | Onde |
 |---|---|---|
-| **`porecatu-protocol` por commit**: dependência git com `rev = "0909e7c…"` do `main` do protocolo (especificação 0.4, desde 2026-11-17; de 2026-11-16 até então, `758d68c…`, a 0.3; antes, por caminho local). Trocar por versão exata quando o crate for publicado | Pendente, não bloqueia | [ADR-0001](adr/0001-rust-tokio-e-axum.md), [ADR-0007](adr/0007-toolchain-pinada.md) |
+| **`porecatu-protocol` por commit**: dependência git com `rev = "4ce7e4f…"` do `main` do protocolo (especificação 0.5, desde 2026-11-20; de 2026-11-17 até então, `0909e7c…`, a 0.4; de 2026-11-16 a 2026-11-17, `758d68c…`, a 0.3; antes, por caminho local). Trocar por versão exata quando o crate for publicado | Pendente, não bloqueia | [ADR-0001](adr/0001-rust-tokio-e-axum.md), [ADR-0007](adr/0007-toolchain-pinada.md) |
 | **Métrica de latência de encaminhamento** (RF-1.21). Não implementada; não há histograma nenhum | Pendente, aceita pelo dono em 2026-11-16 | [PRD-001](prd/prd-001-operacao-do-relay.md) RF-1.21 |
 | **Aviso de vencimento do certificado a 14 dias**, uma vez por dia. Não implementado | Pendente, aceita pelo dono em 2026-11-16 | [ADR-0004](adr/0004-tls-embutido-ou-atras-de-proxy.md), "Riscos" |
 | **Aviso na subida com `behind_proxy = true` e `bind` fora de rede privada** (RFC 1918/4193). Não implementado | Registrada, sem decisão | [ADR-0004](adr/0004-tls-embutido-ou-atras-de-proxy.md), "Riscos" |

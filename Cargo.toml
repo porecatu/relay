@@ -33,7 +33,7 @@ ipnet = "=2.12.2"
 # with a version; then switch to an exact version. A local checkout next to
 # this repository can override it through `.cargo/config.toml` (gitignored).
 # The exact `version` next to `rev` keeps cargo-deny from seeing a wildcard.
-porecatu-protocol = { version = "=0.1.0", git = "https://github.com/porecatu/protocol", rev = "0909e7ca88e3c180198e8ce7246445c4b0d9fbd1", default-features = false }
+porecatu-protocol = { version = "=0.1.0", git = "https://github.com/porecatu/protocol", rev = "4ce7e4fea324a85a2e99aedccf5b8335755d183e", default-features = false }
 rustls = { version = "=0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 subtle = "=2.6.1"

@@ -16,6 +16,10 @@ de atualizar; fixar `X.Y` evita surpresas.
 Implementação inicial, versão `0.1.0` no `Cargo.toml`. Serve o envelope
 `/v0/` da [especificação do protocolo](https://github.com/porecatu/protocol/blob/main/docs/especificacao/01-transporte-e-relay.md).
 
+### Mudado
+
+- `porecatu-protocol` sobe para o commit da especificação 0.5 (`4ce7e4f`, 2026-11-20), que troca a ação `activate-tab` pela mensagem `view-tab`. O relay não lê mensagens de aplicação: nada muda no comportamento; o `rev` sobe para os três projetos falarem o mesmo commit.
+
 ### Adicionado
 
 - Relay cego entre o host (desktop) e os clientes (celulares): registro do host
