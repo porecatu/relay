@@ -25,7 +25,7 @@ axum = { version = "=0.8.9", features = ["ws"] }
 axum-server = { version = "=0.9.2", default-features = false, features = ["tls-rustls-no-provider"] }
 base64 = "=0.23.1"
 blake2 = "=0.10.6"
-bytes = "=1.12.1"
+bytes = "=1.12.2"
 ed25519-dalek = "=3.0.0"
 getrandom = "=0.4.3"
 ipnet = "=2.12.2"
@@ -33,7 +33,7 @@ ipnet = "=2.12.2"
 # with a version; then switch to an exact version. A local checkout next to
 # this repository can override it through `.cargo/config.toml` (gitignored).
 # The exact `version` next to `rev` keeps cargo-deny from seeing a wildcard.
-porecatu-protocol = { version = "=0.1.0", git = "https://github.com/porecatu/protocol", rev = "a52fbb1d5c1a5ab9cd3fb14336b40bdc37c977b2", default-features = false }
+porecatu-protocol = { version = "=0.1.0", git = "https://github.com/porecatu/protocol", rev = "76174dae340c4ea95c64c14506c553dd48e7711d", default-features = false }
 rustls = { version = "=0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 subtle = "=2.6.1"

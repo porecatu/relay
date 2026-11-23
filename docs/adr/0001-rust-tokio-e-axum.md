@@ -29,7 +29,7 @@ O dono do produto decidiu pela stack Rust antes da escrita. Este ADR registra o 
 > **Nota de implementação (2026-11-16):** a decisão se manteve; três detalhes saíram diferentes do texto acima.
 >
 > - **`ciborium` não é dependência direta do relay.** Toda codificação CBOR do envelope está no `porecatu-protocol` (que usa `ciborium`); o relay só chama `porecatu_protocol::envelope` pelo adaptador `src/wire.rs`.
-> - **`porecatu-protocol` ainda não está pinado por versão exata.** Entra como dependência git fixada num commit do `main` do protocolo (`rev = "a52fbb1…"` desde 2026-11-20, a especificação 0.6); vira versão exata quando o crate for publicado ([roadmap](../roadmap.md#pendências)).
+> - **`porecatu-protocol` ainda não está pinado por versão exata.** Entra como dependência git fixada num commit do `main` do protocolo (`rev = "76174da…"` desde 2026-11-23, a especificação 0.7); vira versão exata quando o crate for publicado ([roadmap](../roadmap.md#pendências)).
 > - O `tungstenite` que o `axum` resolve (`=0.29.0`) é dependência direta, só para reconhecer o erro de capacidade (quadro grande demais, `1009`) por tipo, não pelo texto da mensagem.
 
 ## Alternativas consideradas
